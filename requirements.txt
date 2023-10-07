@@ -1,6 +1,11 @@
 pandas
 numpy
 seaborn
-sklearn
+scikit-learn
 cx_Oracle
+PyYAML
+xgboost
+catboost
+dill
+
 -e .

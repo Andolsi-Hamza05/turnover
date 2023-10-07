@@ -4,8 +4,7 @@ import requests
 from bs4 import BeautifulSoup
 import re
 from datetime import datetime
-import logging
-from ETL.logger import logging
+from src.logger import logging
 
 #logging.basicConfig(level=logging.INFO)
 
@@ -25,9 +24,9 @@ class Transform:
                 errors='coerce'
             )
     
-    def transform_columns_to_type(self, column_list: list, type:str):
+    def transform_columns_to_type(self, column_list: list, data_type):
         for column in column_list:
-            self.df[column] = self.df[column].astype(type)
+            self.df[column] = self.df[column].astype(data_type)
     
     def treat_text_column(self,column_name):
         self.df[column_name] = self.df[column_name].apply(lambda x: re.sub(r'\s+', ' ', x).strip().lower())
@@ -53,12 +52,12 @@ class Transform:
         mask = self.df[end_date_column] < self.df[start_date_column]
         self.df = self.df[~mask]
 
-    def webscrape_country_code():
+    def webscrape_country_code(self):
         # URL of the webpage containing the table
         url = 'https://www.iban.com/country-codes'
 
         # Send an HTTP request and get the HTML content
-        response = requests.get(url)
+        response = requests.get(url,timeout=10)
         html_content = response.content
 
         # Parse the HTML content using BeautifulSoup
@@ -109,23 +108,23 @@ def transform_absence(df):
     try :
         transformer.remove_column('ABSENCE_CODE')
     except Exception as e:
-        logger.error(f"something went wrong when removing columns: {e}")
+        logger.error("something went wrong when removing columns: %s", e) 
     try : 
         transformer.format_column_as_date(['ABSENCE_END_DATE','ABSENCE_START_DATE'])
         transformer.transform_columns_to_type(['ABSENCE_LIB'],'category')
     except Exception as e:
-        logger.error(f"something went wrong when formatting columns type: {e}")
+        logger.error("something went wrong when formatting columns type: %s",e)
     try :
         transformer.treat_text_column('ABSENCE_LIB')
         transformer.apply_mapping('ABSENCE_LIB',absence_dict)
     except Exception as e:
-        logger.error(f"something went wrong when working matching libelles : {e}")
+        logger.error("something went wrong when working matching libelles : %s",e)
     try :
         transformer.remove_out_of_range_date('ABSENCE_END_DATE')
         transformer.remove_out_of_range_date('ABSENCE_START_DATE')
         transformer.delete_rows_by_date_comparison('ABSENCE_START_DATE','ABSENCE_END_DATE')
     except Exception as e:
-        logger.error(f"An error occurred during removing inconsistent data: {e}")
+        logger.error("An error occurred during removing inconsistent data: %s",e)
 
     logger.info("Ending the transform_absence function.")
     return df
@@ -152,23 +151,23 @@ def transform_assignment(df):
     try :
         transformer.remove_column(['ASSIGNMENT_ORGUNIT_CODE','ASSIGNMENT_OFFICE_CODE','ASSIGNMENT_JOB_CODE'])
     except Exception as e:
-        logger.error(f"something went wrong when removing columns: {e}")
+        logger.error("something went wrong when removing columns: %s",e)
     try :
         transformer.format_column_as_date(['ASSIGNMENT_START_DATE','ASSIGNMENT_END_DATE'])
         transformer.transform_columns_to_type(['ASSIGNMENT_JOB_LIB'],'category')
     except Exception as e:
-        logger.error(f"something went wrong when formatting columns type: {e}")
+        logger.error("something went wrong when formatting columns type: %s",e)
     try :
         transformer.treat_text_column('ASSIGNMENT_JOB_LIB')
         transformer.apply_mapping('ASSIGNMENT_JOB_LIB',assignment_dict)
     except Exception as e:
-        logger.error(f"something went wrong when working matching libelles : {e}")
+        logger.error("something went wrong when working matching libelles : %s",e)
     try :
         transformer.remove_out_of_range_date('ASSIGNMENT_START_DATE')
         transformer.remove_out_of_range_date('ASSIGNMENT_END_DATE')
         transformer.delete_rows_by_date_comparison('ASSIGNMENT_START_DATE','ASSIGNMENT_END_DATE')
     except Exception as e:
-        logger.error(f"An error occurred during removing inconsistent data: {e}")
+        logger.error("An error occurred during removing inconsistent data: %s",e)
     logger.info("Ending the transform_assignment function.")
     return df
 
@@ -179,18 +178,18 @@ def transform_employee(df):
     try :
         transformer.remove_column(['EMPLOYEE','EMP_MATRICULE','EMP_TYPE','EMP_CODE1','EMP_CODE2'])
     except Exception as e:
-        logger.error(f"something went wrong when removing columns: {e}")
+        logger.error("something went wrong when removing columns: %s",e)
     try : 
         transformer.format_column_as_date(['EMP_SENIORITY_DATE','EMP_BIRTH_DATE'])
         transformer.transform_columns_to_type(['EMP_GENDER_CODE'],'category')
         transformer.transform_columns_to_type(['EMP_LASTNAME','EMP_FIRSTNAME'],'string')
     except Exception as e:
-        logger.error(f"something went wrong when formatting columns type: {e}")
+        logger.error("something went wrong when formatting columns type: %s",e)
     try :    
         data=transformer.webscrape_country_code()
         transformer.match_country_code_with_lib(data,'EMP_COUNTRYOFBIRTH_CODE','EMPLOYEE_KEY')
     except Exception as e:
-        logger.error(f"something went wrong when working matching country libelles : {e}")
+        logger.error("something went wrong when working matching country libelles : %s",e)
     transformer.treat_text_column('EMP_FIRSTNAME')
     transformer.treat_text_column('EMP_LASTNAME')
     try :
@@ -199,7 +198,7 @@ def transform_employee(df):
         transformer.delete_rows_by_date_comparison('EMP_BIRTH_DATE','EMP_SENIORITY_DATE')
         transformer.remove_possible_inaccurent_salaries('EMP_SALARY')
     except Exception as e:
-        logger.error(f"An error occurred during removing inconsistent data: {e}")
+        logger.error("An error occurred during removing inconsistent data: %s",e)
     logger.info("Ending the transform_employee function.")
     return df
 
@@ -210,23 +209,23 @@ def transform_contract(df):
     try :
         transformer.remove_column(['CONTRACT_CODE','CONTRACT_QUALIF_CODE','CONTRACT_TYPE_CODE','NUDOSS','DATE_DEBUT_CONTRAT'])
     except Exception as e:
-        logger.error(f"something went wrong when removing columns: {e}")
+        logger.error("something went wrong when removing columns: %s",e)
     try : 
         transformer.format_column_as_date(['CONTRACT_START_DATE','CONTRACT_END_DATE'])
         transformer.transform_columns_to_type(['QUALIFDESCRIPTION'],'category')
     except Exception as e:
-        logger.error(f"something went wrong when formatting columns type: {e}")  
+        logger.error("something went wrong when formatting columns type: %s", e)   
     try :
         transformer.treat_text_column('QUALIFDESCRIPTION')
         transformer.apply_mapping('ASSIGNMENT_JOB_LIB',assignment_dict)
     except Exception as e:
-        logger.error(f"something went wrong when working matching libelles : {e}")
+        logger.error("something went wrong when working matching libelles : %s",e)
     try :
         transformer.remove_out_of_range_date('CONTRACT_START_DATE')
         transformer.remove_out_of_range_date('CONTRACT_END_DATE')
         transformer.delete_rows_by_date_comparison('CONTRACT_START_DATE','CONTRACT_END_DATE')
     except Exception as e:
-        logger.error(f"An error occurred during removing inconsistent data: {e}")
+        logger.error("An error occurred during removing inconsistent data: %s",e)
     logger.info("Ending the transform_contract function.")
     return df
 
@@ -237,18 +236,18 @@ def transform_entryexit(df):
     try : 
         transformer.remove_column(['ENTRY_PATTERN_CODE','EXIT_PATTERN_CODE','REASON_EXIT_CODE'])
     except Exception as e:
-        logger.error(f"something went wrong when working matching country libelles : {e}")
+        logger.error("something went wrong when working matching country libelles : %s",e)
     try : 
         transformer.format_column_as_date(['ENTRY_DATE','EXIT_DATE'])
         transformer.transform_columns_to_type(['LIB_ENTRY_PATTERN','LIB_EXIT_PATTERN','LIB_REASON_EXIT'],'category')
     except Exception as e:
-        logger.error(f"something went wrong when formatting columns type: {e}") 
+        logger.error("something went wrong when formatting columns type: %s",e) 
     try : 
         transformer.remove_out_of_range_date('ENTRY_DATE')
         transformer.remove_out_of_range_date('EXIT_DATE')
         transformer.delete_rows_by_date_comparison('ENTRY_DATE','EXIT_DATE')
     except Exception as e:
-        logger.error(f"An error occurred during removing inconsistent data: {e}")
+        logger.error("An error occurred during removing inconsistent data: %s",e)
     logger.info("Ending the transform_entryexit function.")
     return df
 
