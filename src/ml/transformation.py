@@ -19,26 +19,33 @@ from src.utils import save_object
 @dataclass
 class DataTransformationConfig:
     """ save preprocessor pkl file in artifacts folder """
-    preprocessor_obj_file_path = os.path.join('artifacts', "proprocessor.pkl")
+    preprocessor_obj_file_path = os.path.join('artifacts', "preprocessor.pkl")
 
 
 class Transform:
-    """ this class is for formatting the data train/test/valid sets """
+    """ this class is for formatting the data train/test sets """
 
     def __init__(self, df):
         self.df = df
 
-    def transform_columns(self, df):
+    def transform_columns(self):
         """ format the type of columns """
-        df[['POSITION']] = df[['POSITION']].astype('category')
-        df['TURNOVER'] = df['TURNOVER'].replace({'no': 0, 'yes': 1})
-        df[['TURNOVER']] = df[['TURNOVER']].astype('int')
+        self.df[['POSITION']] = self.df[['POSITION']].astype('category')
+        try:
+            if 'TURNOVER' in self.df.columns:
+                self.df['TURNOVER'] = self.df['TURNOVER'].replace({'no': 0, 'yes': 1})
+                self.df[['TURNOVER']] = self.df[['TURNOVER']].astype('int')
+            else:
+                logging.info('No TURNOVER column found in the DataFrame.')
+        except Exception as e:
+            logging.error('An error occurred while processing the TURNOVER column.')
+            raise CustomException(e, sys) from e
 
-    def map_salary_column(self, df):
+    def map_salary_column(self):
         """ map the ordinal categorical column salary 0 for low, 1 for medium and 2 for high """
-        df['SALARY'] = df['SALARY'].map(
+        self.df['SALARY'] = self.df['SALARY'].map(
             {'high': 2, 'medium': 1, 'low': 0}).astype(int)
-
+        
 
 class DataTransformation:
     """ this class is for creating a standard data pipeline for data transformation """
@@ -89,21 +96,21 @@ class DataTransformation:
         except Exception as e:
             raise CustomException(e, sys) from e
 
-    def initiate_data_transformation(self, train_path, validation_path):
+    def initiate_data_transformation(self, train_path, test_path):
         """ do the transformations on the train and test data """
         try:
             logging.info("Read train and test data completed")
             train_df = pd.read_csv(train_path)
-            valid_df = pd.read_csv(validation_path)
+            test_df = pd.read_csv(test_path)
             transformer1 = Transform(train_df)
-            transformer2 = Transform(valid_df)
+            transformer2 = Transform(test_df)
 
             logging.info("Preparing columns")
-            transformer1.transform_columns(train_df)
-            transformer2.transform_columns(valid_df)
+            transformer1.transform_columns()
+            transformer2.transform_columns()
 
-            transformer1.map_salary_column(train_df)
-            transformer2.map_salary_column(valid_df)
+            transformer1.map_salary_column()
+            transformer2.map_salary_column()
 
             logging.info("Obtaining preprocessing object")
             preprocessing_obj = self.get_data_transformer_object()
@@ -114,24 +121,23 @@ class DataTransformation:
                 columns=[target_column_name], axis=1)
             target_feature_train_df = train_df[target_column_name]
 
-            input_feature_valid_df = valid_df.drop(
+            input_feature_test_df = test_df.drop(
                 columns=[target_column_name], axis=1)
-            target_feature_valid_df = valid_df[target_column_name]
+            target_feature_test_df = test_df[target_column_name]
 
-            logging.info(
-                "Applying preprocessing object on training dataframe and testing dataframe."
-            )
+            logging.info('how does the datasets look like before passing by the preprocessor object %s',input_feature_train_df)
+
 
             input_feature_train_arr = preprocessing_obj.fit_transform(
                 input_feature_train_df)
-            input_feature_valid_arr = preprocessing_obj.transform(
-                input_feature_valid_df)
-
+            input_feature_test_arr = preprocessing_obj.transform(
+                input_feature_test_df)
+            logging.info('how does the datasets look like after passing by the preprocessor object %s',input_feature_train_arr)
             train_arr = np.c_[
                 input_feature_train_arr, np.array(target_feature_train_df)
             ]
-            test_arr = np.c_[input_feature_valid_arr,
-                             np.array(target_feature_valid_df)]
+            test_arr = np.c_[input_feature_test_arr,
+                             np.array(target_feature_test_df)]
 
             logging.info("Saved preprocessing object.")
 

@@ -1,0 +1,109 @@
+<html>
+<body>
+    <div class="login">
+       <h1>HR Web Application to track turnover</h1>
+   
+       <form action="{{ url_for('predict_datapoint')}}" method="post">
+        <h1>
+            <legend>Predict turnover</legend>
+        </h1>
+        <div class="mb-3">
+            <label class="form-label">Gender</label>
+            <select class="form-control" type="number" name="gender" placeholder="Enter you Gender" required>
+                <option class="placeholder" selected disabled value="">Select your Gender</option>
+                <option value=1>
+                    Male
+                </option>
+                <option value=0>
+                    Female
+                </option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Promotion</label>
+            <select class="form-control" type="number" name="promotion" placeholder="Has he been promoted" required>
+                <option class="placeholder" selected disabled value="">Select answer</option>
+                <option value=1>
+                    yes
+                </option>
+                <option value=0>
+                    no
+                </option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Salary</label>
+            <select class="form-control" name="salary"
+                placeholder="Enter his salary" required>
+                <option class="placeholder" selected disabled value="">Select salary level</option>
+                <option value="0">
+                    low
+                </option>
+                <option value="1">
+                    medium
+                </option>
+                <option value="2">
+                    high
+                </option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Position</label>
+            <select class="form-control" name="position" placeholder="Enter his position" required>
+                <option class="placeholder" selected disabled value="">Select Department</option>
+                <option value="sales">
+                    sales
+                </option>
+                <option value="retail">
+                    retail
+                </option>
+                <option value="operations">
+                    operations
+                </option>
+                <option value="engineering">
+                    standard
+                </option>
+                <option value="marketing">
+                    marketing
+                </option>
+                <option value="support">
+                    support
+                </option>
+                <option value="admin">
+                    admin
+                </option>
+                <option value="finance">
+                    finance
+                </option>
+                <option value="logistics">
+                    logistics
+                </option>
+                <option value="IT">
+                    IT
+                </option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Seniority years</label>
+            <input class="form-control" type="number" name="seniority"
+                placeholder="Enter float number of seniority's years" min='0' max='50' />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">The number of hours of absence</label>
+            <input class="form-control" type="number" name="absences"
+                placeholder="Enter the number absences'days" min='0' max='10000' />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">The number of assignments or projects</label>
+            <input class="form-control" type="number" name="assignments"
+                placeholder="Enter the number of projects" min='0' max='1000' />
+        </div>
+        <div class="mb-3">
+            <input class="btn btn-primary" type="submit" value="Predict if this employee will churn or no " required />
+        </div>
+    </form>
+    <h2>
+       This employee is {{results}}
+    </h2>
+   <body>
+</html>
